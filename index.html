@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投资组合管理系统</title>
+    <meta name="description" content="个人投资组合管理工具，支持多用户、数据导出导入、资产配置分析">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .login-input {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .demo-accounts {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .demo-accounts h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .overview, .chart-section, .data-tools, .add-form, .holdings {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .overview h2, .chart-section h2, .data-tools h3, .holdings h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .stat-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .positive {
+            color: #28a745;
+        }
+        
+        .negative {
+            color: #dc3545;
+        }
+
+        .chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .pie-chart {
+            width: 300px;
+            height: 300px;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 200px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .legend-value {
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .holdings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stock-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .stock-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .stock-card:hover .stock-actions {
+            opacity: 1;
+        }
+
+        .stock-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .edit-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #138496;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .stock-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stock-code {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .risk-low {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .risk-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .risk-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .stock-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .hidden {
+            display: none;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .sync-saving {
+            background-color: #ffc107;
+            color: #856404;
+        }
+
+        .sync-saved {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .sync-error {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header-right {
+                justify-content: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+
+            .chart-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .chart-wrapper {
+                width: 250px;
+                height: 250px;
+            }
+
+            .pie-chart {
+                width: 250px;
+                height: 250px;
+            }
+
+            .login-box {
+                margin: 10px;
+                padding: 30px 20px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1 class="login-title">📊 投资组合管理系统</h1>
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <input 
+                    type="text" 
+                    class="login-input" 
+                    placeholder="用户名" 
+                    id="username"
+                    autocomplete="username"
+                    required
+                >
+                <input 
+                    type="password" 
+                    class="login-input" 
+                    placeholder="密码" 
+                    id="password"
+                    autocomplete="current-password"
+                    required
+                >
+                <button type="submit" class="login-btn">登录</button>
+                <div class="error-message" id="errorMessage">用户名或密码错误</div>
+                
+                <div class="demo-accounts">
+                    <h4>演示账户</h4>
+                    <div>管理员: admin / admin123</div>
+                    <div>演示用户: demo / demo123</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sync Indicator -->
+    <div id="syncIndicator" class="sync-indicator hidden">保存中...</div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="title">📊 投资组合管理系统</h1>
+                <div class="header-right">
+                    <span class="user-info">欢迎，<span id="currentUser"></span></span>
+                    <button class="btn btn-primary" onclick="toggleBalance()">
+                        <span id="toggleText">隐藏金额</span>
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">登出</button>
+                </div>
+            </div>
+
+            <!-- Data Tools -->
+            <div class="data-tools">
+                <h3>🔧 数据管理</h3>
+                <div class="tools-grid">
+                    <button class="btn btn-info" onclick="exportData()">📥 导出数据</button>
+                    <button class="btn btn-info" onclick="importData()">📤 导入数据</button>
+                    <button class="btn btn-info" onclick="resetData()">🔄 重置数据</button>
+                    <button class="btn btn-info" onclick="showHelp()">❓ 使用帮助</button>
+                </div>
+                <input type="file" id="importFile" style="display: none;" accept=".json" onchange="handleImportFile(event)">
+            </div>
+            
+            <!-- Overview -->
+            <div class="overview">
+                <h2>💰 总资产概览</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <h3>总资产</h3>
+                        <div class="value" id="totalAssets">¥0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <h3>股票市值</h3>
+                        <div class="value" id="stockValue">¥0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <h3>现金余额</h3>
+                        <div class="value" id="cashBalance">¥0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <h3>总盈亏</h3>
+                        <div class="value" id="totalProfit">¥0.00 (0.00%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <h2>📈 资产配置分析</h2>
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <svg class="pie-chart" id="pieChart" viewBox="0 0 200 200">
+                            <circle cx="100" cy="100" r="80" fill="#f0f0f0" />
+                            <text x="100" y="100" text-anchor="middle" dy="0.3em" fill="#666" font-size="14">暂无数据</text>
+                        </svg>
+                    </div>
+                    <div class="chart-legend" id="chartLegend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #28a745"></div>
+                            <span class="legend-label">现金</span>
+                            <span class="legend-value">100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-success" onclick="toggleAddForm()">
+                    ➕ <span id="addButtonText">添加股票</span>
+                </button>
+                <input type="text" class="search-input" placeholder="🔍 搜索股票名称或代码" 
+                       oninput="filterStocks(this.value)">
+            </div>
+            
+            <!-- Add Stock Form -->
+            <div class="add-form hidden" id="addForm">
+                <h3 style="margin-bottom: 15px;" id="formTitle">📝 添加新股票</h3>
+                <div class="form-grid">
+                    <input type="text" class="form-input" placeholder="股票名称" id="newStockName">
+                    <input type="text" class="form-input" placeholder="股票代码" id="newStockCode">
+                    <input type="number" class="form-input" placeholder="持仓数量" id="newStockShares" min="0">
+                    <input type="number" class="form-input" placeholder="成本价" step="0.01" id="newStockCost" min="0">
+                    <input type="number" class="form-input" placeholder="现价" step="0.01" id="newStockCurrentPrice" min="0">
+                    <input type="date" class="form-input" id="newStockPurchaseDate">
+                    <select class="form-input" id="newStockRisk">
+                        <option value="低风险">低风险</option>
+                        <option value="中风险" selected>中风险</option>
+                        <option value="高风险">高风险</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="saveStock()">✅ 确认</button>
+                    <button class="btn btn-secondary" onclick="cancelEdit()">❌ 取消</button>
+                </div>
+            </div>
+            
+            <!-- Holdings -->
+            <div class="holdings">
+                <h3>📋 持仓列表 (<span id="stockCount">0</span> 只股票)</h3>
+                <div class="holdings-grid" id="holdingsGrid">
+                    <div style="text-align: center; color: #666; grid-column: 1/-1; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📈</div>
+                        <div>暂无持仓股票，点击"添加股票"开始管理您的投资组合</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User Management - 在这里添加更多用户
+        const USERS = {
+            'admin': 'admin123',
+            'demo': 'demo123',
+            // 在下面添加你的用户和朋友的账户
+            // 'your_username': 'your_password',
+            // 'friend1': 'friend1_password'
+        };
+
+        // App State
+        let currentUser = null;
+        let showBalance = true;
+        let showAddForm = false;
+        let editingStockId = null;
+        let nextStockId = 1;
+        let cashBalance = 50000; // 默认现金余额，可以修改
+
+        // Default stocks data - 示例数据
+        const defaultStocks = [
+            {
+                id: 1,
+                name: '招商银行',
+                code: '600036',
+                shares: 1000,
+                cost: 45.20,
+                currentPrice: 52.80,
+                risk: '低风险',
+                purchaseDate: '2023-01-15'
+            },
+            {
+                id: 2,
+                name: '比亚迪',
+                code: '002594',
+                shares: 200,
+                cost: 186.50,
+                currentPrice: 245.30,
+                risk: '中风险',
+                purchaseDate: '2023-06-20'
+            },
+            {
+                id: 3,
+                name: '宁德时代',
+                code: '300750',
+                shares: 100,
+                cost: 420.00,
+                currentPrice: 189.90,
+                risk: '高风险',
+                purchaseDate: '2024-03-10'
+            }
+        ];
+
+        let stocks = [];
+
+        // Risk colors
+        const riskColors = {
+            '低风险': '#17a2b8',
+            '中风险': '#ffc107', 
+            '高风险': '#dc3545',
+            '现金': '#28a745'
+        };
+
+        // Authentication Functions
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (USERS[username] && USERS[username] === password) {
+                currentUser = username;
+                localStorage.setItem('currentUser', username);
+                showApp();
+                loadUserData();
+            } else {
+                showError('用户名或密码错误');
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要登出吗？未保存的数据将会丢失。')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            hideError();
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('currentUser').textContent = currentUser;
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Data Management Functions
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            showSyncIndicator('saving');
+            
+            const userData = {
+                stocks: stocks,
+                showBalance: showBalance,
+                cashBalance: cashBalance,
+                nextStockId: nextStockId,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            localStorage.setItem(`portfolioData_${currentUser}`, JSON.stringify(userData));
+            
+            setTimeout(() => {
+                showSyncIndicator('saved');
+            }, 300);
+        }
+
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            const userData = localStorage.getItem(`portfolioData_${currentUser}`);
+            if (userData) {
+                try {
+                    const data = JSON.parse(userData);
+                    stocks = data.stocks || [];
+                    showBalance = data.showBalance !== undefined ? data.showBalance : true;
+                    cashBalance = data.cashBalance || 50000;
+                    nextStockId = data.nextStockId || (Math.max(...stocks.map(s => s.id || 0)) + 1);
+                } catch (error) {
+                    console.error('Failed to load user data:', error);
+                    stocks = [];
+                    showSyncIndicator('error');
+                }
+            } else {
+                // 首次使用，为演示账户提供示例数据
+                if (currentUser === 'demo') {
+                    stocks = [...defaultStocks];
+                    nextStockId = 4;
+                    saveUserData();
+                } else {
+                    stocks = [];
+                    nextStockId = 1;
+                }
+            }
+            
+            updateOverview();
+            renderStocks();
+            document.getElementById('toggleText').textContent = showBalance ? '隐藏金额' : '显示金额';
+        }
+
+        function exportData() {
+            const userData = {
+                stocks: stocks,
+                showBalance: showBalance,
+                cashBalance: cashBalance,
+                lastUpdated: new Date().toISOString(),
+                user: currentUser,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `portfolio_${currentUser}_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('数据导出成功！文件已下载到本地。');
+        }
+
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const userData = JSON.parse(e.target.result);
+                    
+                    if (confirm('确定要导入这个数据文件吗？这将覆盖当前所有数据。')) {
+                        stocks = userData.stocks || [];
+                        showBalance = userData.showBalance !== undefined ? userData.showBalance : true;
+                        cashBalance = userData.cashBalance || 50000;
+                        nextStockId = Math.max(...stocks.map(s => s.id || 0)) + 1;
+                        
+                        updateOverview();
+                        renderStocks();
+                        saveUserData();
+                        document.getElementById('toggleText').textContent = showBalance ? '隐藏金额' : '显示金额';
+                        
+                        alert('数据导入成功！');
+                    }
+                } catch (error) {
+                    alert('文件格式错误，请选择有效的JSON文件');
+                    console.error('Import error:', error);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function resetData() {
+            if (confirm('确定要重置所有数据吗？这个操作不可恢复！')) {
+                if (confirm('最后确认：重置后所有股票数据将被清空，现金余额将重置为50000元，确定继续吗？')) {
+                    stocks = [];
+                    cashBalance = 50000;
+                    nextStockId = 1;
+                    showBalance = true;
+                    
+                    updateOverview();
+                    renderStocks();
+                    saveUserData();
+                    document.getElementById('toggleText').textContent = '隐藏金额';
+                    
+                    alert('数据已重置！');
+                }
+            }
+        }
+
+        function showHelp() {
+            const helpText = `
+📊 投资组合管理系统使用帮助
+
+🔐 登录功能：
+• 支持多用户，每人数据独立
+• 数据保存在浏览器本地存储中
+
+💰 资产管理：
+• 添加股票：填写基本信息和购买日期
+• 编辑股票：鼠标悬停在股票卡片上显示编辑按钮
+• 删除股票：点击删除按钮（需确认）
+
+📈 数据分析：
+• 自动计算持股天数和年化收益率
+• 资产配置饼图显示风险分布
+• 实时盈亏统计
+
+🔧 数据管理：
+• 导出数据：保存为JSON文件备份
+• 导入数据：从文件恢复数据
+• 重置数据：清空所有数据重新开始
+
+⚠️ 注意事项：
+• 数据存储在浏览器中，清除浏览器数据会丢失
+• 建议定期导出数据进行备份
+• 不同浏览器的数据不互通
+
+🔒 安全提示：
+• 更改默认密码保证数据安全
+• 不要在公共电脑上保存敏感数据
+            `;
+            alert(helpText);
+        }
+
+        function showSyncIndicator(status) {
+            const indicator = document.getElementById('syncIndicator');
+            indicator.className = 'sync-indicator sync-' + status;
+            
+            switch(status) {
+                case 'saving':
+                    indicator.textContent = '保存中...';
+                    break;
+                case 'saved':
+                    indicator.textContent = '已保存';
+                    break;
+                case 'error':
+                    indicator.textContent = '保存失败';
+                    break;
+            }
+            
+            indicator.classList.remove('hidden');
+            
+            if (status === 'saved' || status === 'error') {
+                setTimeout(() => {
+                    indicator.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        // Utility Functions
+        function formatCurrency(value) {
+            if (!showBalance) return '****';
+            return '¥' + value.toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatNumber(value, decimals = 2) {
+            if (!showBalance) return '****';
+            return value.toFixed(decimals);
+        }
+
+        function formatPercentage(value) {
+            if (!showBalance) return '****';
+            return value.toFixed(1) + '%';
+        }
+
+        function calculateStockData(stock) {
+            const marketValue = stock.shares * stock.currentPrice;
+            const totalCost = stock.shares * stock.cost;
+            const profit = marketValue - totalCost;
+            const profitRate = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+            
+            // Calculate holding days
+            const purchaseDate = new Date(stock.purchaseDate);
+            const today = new Date();
+            const holdingDays = Math.floor((today - purchaseDate) / (1000 * 60 * 60 * 24));
+            
+            // Calculate annualized return rate
+            const holdingYears = holdingDays / 365;
+            const annualizedReturn = holdingYears > 0 ? (Math.pow(marketValue / totalCost, 1 / holdingYears) - 1) * 100 : 0;
+            
+            return {
+                ...stock,
+                marketValue,
+                totalCost,
+                profit,
+                profitRate,
+                holdingDays,
+                annualizedReturn
+            };
+        }
+
+        function getAssetAllocation() {
+            const enrichedStocks = stocks.map(calculateStockData);
+            
+            const allocation = {
+                '低风险': 0,
+                '中风险': 0,
+                '高风险': 0,
+                '现金': cashBalance
+            };
+
+            enrichedStocks.forEach(stock => {
+                allocation[stock.risk] += stock.marketValue;
+            });
+
+            const totalAssets = Object.values(allocation).reduce((sum, value) => sum + value, 0);
+            
+            const chartData = Object.entries(allocation)
+                .filter(([key, value]) => value > 0)
+                .map(([key, value]) => ({
+                    label: key,
+                    value: value,
+                    percentage: totalAssets > 0 ? (value / totalAssets) * 100 : 0,
+                    color: riskColors[key]
+                }));
+
+            return { chartData, totalAssets };
+        }
+
+        function drawPieChart() {
+            const { chartData } = getAssetAllocation();
+            const svg = document.getElementById('pieChart');
+            const centerX = 100;
+            const centerY = 100;
+            const radius = 80;
+
+            svg.innerHTML = '';
+
+            if (chartData.length === 0) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', centerX);
+                circle.setAttribute('cy', centerY);
+                circle.setAttribute('r', radius);
+                circle.setAttribute('fill', '#f0f0f0');
+                svg.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', centerX);
+                text.setAttribute('y', centerY);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dy', '0.3em');
+                text.setAttribute('fill', '#666');
+                text.setAttribute('font-size', '14');
+                text.textContent = '暂无数据';
+                svg.appendChild(text);
+                return;
+            }
+
+            let currentAngle = -Math.PI / 2;
+
+            chartData.forEach((segment, index) => {
+                const angle = (segment.percentage / 100) * 2 * Math.PI;
+                const endAngle = currentAngle + angle;
+
+                const x1 = centerX + radius * Math.cos(currentAngle);
+                const y1 = centerY + radius * Math.sin(currentAngle);
+                const x2 = centerX + radius * Math.cos(endAngle);
+                const y2 = centerY + radius * Math.sin(endAngle);
+
+                const largeArcFlag = angle > Math.PI ? 1 : 0;
+
+                const pathData = [
+                    `M ${centerX} ${centerY}`,
+                    `L ${x1} ${y1}`,
+                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                    'Z'
+                ].join(' ');
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', segment.color);
+                path.setAttribute('stroke', '#fff');
+                path.setAttribute('stroke-width', '2');
+                path.style.transition = 'opacity 0.3s';
+                
+                path.addEventListener('mouseenter', function() {
+                    this.style.opacity = '0.8';
+                });
+                path.addEventListener('mouseleave', function() {
+                    this.style.opacity = '1';
+                });
+
+                svg.appendChild(path);
+                currentAngle = endAngle;
+            });
+        }
+
+        function updateRiskLegend() {
+            const { chartData } = getAssetAllocation();
+            const legend = document.getElementById('chartLegend');
+            
+            if (chartData.length === 0) {
+                legend.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: ${riskColors['现金']}"></div>
+                        <span class="legend-label">现金</span>
+                        <span class="legend-value">100%</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            legend.innerHTML = chartData.map(segment => `
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${segment.color}"></div>
+                    <span class="legend-label">${segment.label}</span>
+                    <span class="legend-value">
+                        ${formatCurrency(segment.value)}<br>
+                        <small style="color: #666;">${formatPercentage(segment.percentage)}</small>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateOverview() {
+            const enrichedStocks = stocks.map(calculateStockData);
+            const totalStockValue = enrichedStocks.reduce((sum, stock) => sum + stock.marketValue, 0);
+            const totalCost = enrichedStocks.reduce((sum, stock) => sum + stock.totalCost, 0);
+            const totalProfit = totalStockValue - totalCost;
+            const totalProfitRate = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+            const totalAssets = totalStockValue + cashBalance;
+
+            document.getElementById('totalAssets').textContent = formatCurrency(totalAssets);
+            document.getElementById('stockValue').textContent = formatCurrency(totalStockValue);
+            document.getElementById('cashBalance').textContent = formatCurrency(cashBalance);
+            
+            const profitElement = document.getElementById('totalProfit');
+            const profitText = `${totalProfit >= 0 ? '+' : ''}${formatCurrency(totalProfit)} (${formatNumber(totalProfitRate)}%)`;
+            profitElement.textContent = profitText;
+            profitElement.className = `value ${totalProfit >= 0 ? 'positive' : 'negative'}`;
+            
+            // Update stock count
+            document.getElementById('stockCount').textContent = stocks.length;
+            
+            drawPieChart();
+            updateRiskLegend();
+        }
+
+        function getRiskClass(risk) {
+            switch(risk) {
+                case '低风险': return 'risk-low';
+                case '中风险': return 'risk-medium';
+                case '高风险': return 'risk-high';
+                default: return 'risk-medium';
+            }
+        }
+
+        function renderStocks(stocksToRender = stocks) {
+            const grid = document.getElementById('holdingsGrid');
+            
+            if (stocksToRender.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; color: #666; grid-column: 1/-1; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📈</div>
+                        <div>暂无持仓股票，点击"添加股票"开始管理您的投资组合</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = stocksToRender.map(stock => {
+                const enriched = calculateStockData(stock);
+                return `
+                    <div class="stock-card">
+                        <div class="stock-actions">
+                            <button class="action-btn edit-btn" onclick="editStock(${stock.id})" title="编辑股票">✏️</button>
+                            <button class="action-btn delete-btn" onclick="deleteStock(${stock.id})" title="删除股票">🗑️</button>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-name">${stock.name}</div>
+                                <div class="stock-code">${stock.code}</div>
+                            </div>
+                            <span class="risk-badge ${getRiskClass(stock.risk)}">${stock.risk}</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-row">
+                                <span class="detail-label">市值</span>
+                                <span class="detail-value">${formatCurrency(enriched.marketValue)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">盈亏</span>
+                                <span class="detail-value ${enriched.profit >= 0 ? 'positive' : 'negative'}">
+                                    ${enriched.profit >= 0 ? '+' : ''}${formatCurrency(enriched.profit)} (${formatNumber(enriched.profitRate)}%)
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">持仓</span>
+                                <span class="detail-value">${showBalance ? stock.shares.toLocaleString() + '股' : '****'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">成本价</span>
+                                <span class="detail-value">${formatNumber(stock.cost)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">现价</span>
+                                <span class="detail-value">${formatNumber(stock.currentPrice)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">持股天数</span>
+                                <span class="detail-value">${enriched.holdingDays}天</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">年化收益率</span>
+                                <span class="detail-value ${enriched.annualizedReturn >= 0 ? 'positive' : 'negative'}">
+                                    ${formatNumber(enriched.annualizedReturn)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // UI Functions
+        function toggleBalance() {
+            showBalance = !showBalance;
+            document.getElementById('toggleText').textContent = showBalance ? '隐藏金额' : '显示金额';
+            updateOverview();
+            renderStocks();
+            saveUserData();
+        }
+
+        function toggleAddForm() {
+            showAddForm = !showAddForm;
+            const form = document.getElementById('addForm');
+            const button = document.getElementById('addButtonText');
+            
+            if (showAddForm) {
+                form.classList.remove('hidden');
+                button.textContent = '取消添加';
+                document.getElementById('formTitle').textContent = '📝 添加新股票';
+                editingStockId = null;
+                clearForm();
+                // Set default date to today
+                document.getElementById('newStockPurchaseDate').valueAsDate = new Date();
+            } else {
+                form.classList.add('hidden');
+                button.textContent = '添加股票';
+                clearForm();
+                editingStockId = null;
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('newStockName').value = '';
+            document.getElementById('newStockCode').value = '';
+            document.getElementById('newStockShares').value = '';
+            document.getElementById('newStockCost').value = '';
+            document.getElementById('newStockCurrentPrice').value = '';
+            document.getElementById('newStockPurchaseDate').value = '';
+            document.getElementById('newStockRisk').value = '中风险';
+        }
+
+        function editStock(stockId) {
+            const stock = stocks.find(s => s.id === stockId);
+            if (!stock) return;
+
+            editingStockId = stockId;
+            showAddForm = true;
+            
+            const form = document.getElementById('addForm');
+            form.classList.remove('hidden');
+            
+            document.getElementById('formTitle').textContent = '✏️ 编辑股票';
+            document.getElementById('addButtonText').textContent = '取消编辑';
+            
+            document.getElementById('newStockName').value = stock.name;
+            document.getElementById('newStockCode').value = stock.code;
+            document.getElementById('newStockShares').value = stock.shares;
+            document.getElementById('newStockCost').value = stock.cost;
+            document.getElementById('newStockCurrentPrice').value = stock.currentPrice;
+            document.getElementById('newStockPurchaseDate').value = stock.purchaseDate;
+            document.getElementById('newStockRisk').value = stock.risk;
+        }
+
+        function deleteStock(stockId) {
+            const stock = stocks.find(s => s.id === stockId);
+            if (!stock) return;
+            
+            if (confirm(`确定要删除 ${stock.name} (${stock.code}) 吗？\n这个操作不可恢复！`)) {
+                const index = stocks.findIndex(s => s.id === stockId);
+                if (index > -1) {
+                    stocks.splice(index, 1);
+                    updateOverview();
+                    renderStocks();
+                    saveUserData();
+                }
+            }
+        }
+
+        function cancelEdit() {
+            toggleAddForm();
+        }
+
+        function saveStock() {
+            const name = document.getElementById('newStockName').value.trim();
+            const code = document.getElementById('newStockCode').value.trim().toUpperCase();
+            const shares = parseFloat(document.getElementById('newStockShares').value);
+            const cost = parseFloat(document.getElementById('newStockCost').value);
+            const currentPrice = parseFloat(document.getElementById('newStockCurrentPrice').value);
+            const purchaseDate = document.getElementById('newStockPurchaseDate').value;
+            const risk = document.getElementById('newStockRisk').value;
+
+            // Validation
+            if (!name || !code || !shares || shares <= 0 || !cost || cost <= 0 || !currentPrice || currentPrice <= 0 || !purchaseDate) {
+                alert('❌ 请填写完整的股票信息！\n\n必填项：\n• 股票名称\n• 股票代码\n• 持仓数量（大于0）\n• 成本价（大于0）\n• 现价（大于0）\n• 购买日期');
+                return;
+            }
+
+            // Check for duplicate codes (except when editing the same stock)
+            const existingStock = stocks.find(s => s.code === code && s.id !== editingStockId);
+            if (existingStock) {
+                alert(`❌ 股票代码 ${code} 已存在！\n现有股票：${existingStock.name}\n请检查代码或合并持仓。`);
+                return;
+            }
+
+            // Check purchase date is not in future
+            const purchaseDateObj = new Date(purchaseDate);
+            const today = new Date();
+            if (purchaseDateObj > today) {
+                alert('❌ 购买日期不能是未来的日期！');
+                return;
+            }
+
+            if (editingStockId) {
+                // Update existing stock
+                const stockIndex = stocks.findIndex(s => s.id === editingStockId);
+                if (stockIndex > -1) {
+                    stocks[stockIndex] = {
+                        ...stocks[stockIndex],
+                        name,
+                        code,
+                        shares,
+                        cost,
+                        currentPrice,
+                        purchaseDate,
+                        risk
+                    };
+                }
+            } else {
+                // Add new stock
+                stocks.push({
+                    id: nextStockId++,
+                    name,
+                    code,
+                    shares,
+                    cost,
+                    currentPrice,
+                    purchaseDate,
+                    risk
+                });
+            }
+
+            updateOverview();
+            renderStocks();
+            toggleAddForm();
+            saveUserData();
+        }
+
+        function filterStocks(searchTerm) {
+            const filtered = stocks.filter(stock => 
+                stock.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                stock.code.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            renderStocks(filtered);
+        }
+
+        // Initialize App
+        function initApp() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser && USERS[savedUser]) {
+                currentUser = savedUser;
+                showApp();
+                loadUserData();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Auto-save when user leaves the page
+        window.addEventListener('beforeunload', function() {
+            if (currentUser && stocks.length > 0) {
+                saveUserData();
+            }
+        });
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
